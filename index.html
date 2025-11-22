@@ -1,0 +1,80 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Receipt Uploader</title>
+  <style>
+    body{font-family:Arial,Helvetica,sans-serif;max-width:720px;margin:30px auto;padding:20px}
+    input,button{padding:10px;margin:6px 0;width:100%}
+    .row{display:flex;gap:10px}
+    .small{width:48%}
+    pre{background:#f6f6f6;padding:10px;border-radius:6px;overflow:auto}
+  </style>
+</head>
+<body>
+  <h2>Upload Receipt</h2>
+
+  <label>Choose receipt image or PDF</label>
+  <input type="file" id="fileInput" accept="image/*,application/pdf">
+
+  <label>Email (optional)</label>
+  <input type="email" id="email" placeholder="you@example.com">
+
+  <label><input type="checkbox" id="notify"> Send results to email (if unchecked, results show here)</label>
+
+  <button id="uploadBtn">Upload & Process</button>
+
+  <h3>Result</h3>
+  <div id="status"></div>
+  <pre id="result"></pre>
+  
+
+  <script>
+    const API_BASE = 'https://id1rasld2a.execute-api.us-east-1.amazonaws.com/prod'; // <-- REPLACE with your API invoke URL (no trailing slash)
+    const fileInput = document.getElementById('fileInput');
+    const uploadBtn = document.getElementById('uploadBtn');
+    const status = document.getElementById('status');
+    const result = document.getElementById('result');
+    const emailInput = document.getElementById('email');
+    const notifyInput = document.getElementById('notify');
+
+    function setStatus(s){ status.innerText = s; }
+    function setResult(r){ result.innerText = JSON.stringify(r, null, 2); }
+
+    uploadBtn.addEventListener('click', async () => {
+      const f = fileInput.files[0];
+      if(!f){ alert('Choose a file'); return; }
+      setStatus('Reading file...');
+      const reader = new FileReader();
+      reader.onload = async function(ev){
+        const b64 = ev.target.result.split(',')[1];
+        setStatus('Uploading to API...');
+        const payload = {
+          filename: f.name,
+          file_base64: b64,
+          email: emailInput.value || null,
+          notify: notifyInput.checked
+        };
+        try {
+          const res = await fetch(API_BASE + '/upload', {
+            method: 'POST',
+            headers: {'Content-Type':'application/json'},
+            body: JSON.stringify(payload)
+          });
+          const data = await res.json();
+          setStatus('Done');
+          if(notifyInput.checked){
+            setResult({'message':'Processed and emailed','receiptId': data.receiptId});
+          } else {
+            setResult(data);
+          }
+        } catch (err){
+          setStatus('Error: ' + err.message);
+        }
+      };
+      reader.readAsDataURL(f);
+    });
+     
+  </script>
+</body>
+</html>
