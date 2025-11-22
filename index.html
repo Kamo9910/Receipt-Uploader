@@ -23,6 +23,7 @@
       margin-top: 15px;
     }
     ul { padding-left: 20px; }
+    .section { margin-top:30px; }
   </style>
 </head>
 <body>
@@ -40,11 +41,22 @@
 
   <button id="uploadBtn">Upload & Process</button>
 
-  <h3>Status</h3>
-  <div id="status"></div>
+  <div class="section">
+    <h3>Status</h3>
+    <div id="status"></div>
+  </div>
 
-  <h3>Result</h3>
-  <div id="result" class="result-box"></div>
+  <div class="section">
+    <h3>Result</h3>
+    <div id="result" class="result-box"></div>
+  </div>
+
+  <div class="section">
+    <h2>Subscribe for Email Updates</h2>
+    <input type="email" id="subEmail" placeholder="Enter your email">
+    <button id="subBtn">Subscribe</button>
+    <div id="subStatus"></div>
+  </div>
 
   <script>
     // Replace with your API Gateway base URL (no trailing slash)
@@ -56,6 +68,10 @@
     const result = document.getElementById('result');
     const emailInput = document.getElementById('email');
     const notifyInput = document.getElementById('notify');
+
+    const subBtn = document.getElementById('subBtn');
+    const subEmail = document.getElementById('subEmail');
+    const subStatus = document.getElementById('subStatus');
 
     function setStatus(s){ status.innerText = s; }
 
@@ -79,6 +95,7 @@
       result.innerHTML = html;
     }
 
+    // Upload & process receipt
     uploadBtn.addEventListener('click', async () => {
       const f = fileInput.files[0];
       if(!f){ alert('Choose a file'); return; }
@@ -112,6 +129,24 @@
         }
       };
       reader.readAsDataURL(f);
+    });
+
+    // Subscribe form
+    subBtn.addEventListener('click', async () => {
+      const email = subEmail.value;
+      if(!email){ alert("Please enter an email"); return; }
+      subStatus.innerText = "Subscribing...";
+      try {
+        const res = await fetch(API_BASE + '/subscribe', {
+          method: 'POST',
+          headers: {'Content-Type':'application/json'},
+          body: JSON.stringify({ email })
+        });
+        const data = await res.json();
+        subStatus.innerText = data.message || "Subscribed!";
+      } catch(err){
+        subStatus.innerText = "Error: " + err.message;
+      }
     });
   </script>
 </body>
