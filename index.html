@@ -1,65 +1,118 @@
-<script>
-  const API_BASE = 'https://id1rasld2a.execute-api.us-east-1.amazonaws.com/prod';
-  const fileInput = document.getElementById('fileInput');
-  const uploadBtn = document.getElementById('uploadBtn');
-  const status = document.getElementById('status');
-  const result = document.getElementById('result');
-  const emailInput = document.getElementById('email');
-  const notifyInput = document.getElementById('notify');
-
-  function setStatus(s){ status.innerText = s; }
-
-  function showResults(data){
-    let html = `<h4>Receipt ID: ${data.receiptId}</h4>`;
-    if(data.summary){
-      html += `<h5>Summary</h5><ul>`;
-      for(const [k,v] of Object.entries(data.summary)){
-        html += `<li><strong>${k}:</strong> ${v}</li>`;
-      }
-      html += `</ul>`;
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Receipt Uploader</title>
+  <style>
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      max-width: 720px;
+      margin: 30px auto;
+      padding: 20px;
     }
-    if(data.lineItems){
-      html += `<h5>Line Items</h5><ul>`;
-      for(const item of data.lineItems){
-        html += `<li>${item.ItemIdentification} — ${item.Price}</li>`;
-      }
-      html += `</ul>`;
+    input, button {
+      padding: 10px;
+      margin: 6px 0;
+      width: 100%;
     }
-    result.innerHTML = html;
-  }
+    label { display:block; margin-top:10px; }
+    .result-box {
+      background: #f6f6f6;
+      padding: 15px;
+      border-radius: 6px;
+      margin-top: 15px;
+    }
+    ul { padding-left: 20px; }
+  </style>
+</head>
+<body>
+  <h2>Upload Receipt</h2>
 
-  uploadBtn.addEventListener('click', async () => {
-    const f = fileInput.files[0];
-    if(!f){ alert('Choose a file'); return; }
-    setStatus('Reading file...');
-    const reader = new FileReader();
-    reader.onload = async function(ev){
-      const b64 = ev.target.result.split(',')[1];
-      setStatus('Uploading to API...');
-      const payload = {
-        filename: f.name,
-        file_base64: b64,
-        email: emailInput.value || null,
-        notify: notifyInput.checked
-      };
-      try {
-        const res = await fetch(API_BASE + '/upload', {
-          method: 'POST',
-          headers: {'Content-Type':'application/json'},
-          body: JSON.stringify(payload)
-        });
-        const data = await res.json();
-        setStatus('Done');
-        if(notifyInput.checked){
-          result.innerHTML = `<p>✅ Processed and emailed to ${emailInput.value}</p>
-                              <p>Receipt ID: ${data.receiptId}</p>`;
-        } else {
-          showResults(data);
+  <label>Choose receipt image or PDF</label>
+  <input type="file" id="fileInput" accept="image/*,application/pdf">
+
+  <label>Email (optional)</label>
+  <input type="email" id="email" placeholder="you@example.com">
+
+  <label>
+    <input type="checkbox" id="notify"> Send results to email (if unchecked, results show here)
+  </label>
+
+  <button id="uploadBtn">Upload & Process</button>
+
+  <h3>Status</h3>
+  <div id="status"></div>
+
+  <h3>Result</h3>
+  <div id="result" class="result-box"></div>
+
+  <script>
+    // Replace with your API Gateway base URL (no trailing slash)
+    const API_BASE = 'https://id1rasld2a.execute-api.us-east-1.amazonaws.com/prod';
+
+    const fileInput = document.getElementById('fileInput');
+    const uploadBtn = document.getElementById('uploadBtn');
+    const status = document.getElementById('status');
+    const result = document.getElementById('result');
+    const emailInput = document.getElementById('email');
+    const notifyInput = document.getElementById('notify');
+
+    function setStatus(s){ status.innerText = s; }
+
+    // Format results into nice HTML
+    function showResults(data){
+      let html = `<h4>Receipt ID: ${data.receiptId}</h4>`;
+      if(data.summary){
+        html += `<h5>Summary</h5><ul>`;
+        for(const [k,v] of Object.entries(data.summary)){
+          html += `<li><strong>${k}:</strong> ${v}</li>`;
         }
-      } catch (err){
-        setStatus('Error: ' + err.message);
+        html += `</ul>`;
       }
-    };
-    reader.readAsDataURL(f);
-  });
-</script>
+      if(data.lineItems){
+        html += `<h5>Line Items</h5><ul>`;
+        for(const item of data.lineItems){
+          html += `<li>${item.ItemIdentification} — ${item.Price}</li>`;
+        }
+        html += `</ul>`;
+      }
+      result.innerHTML = html;
+    }
+
+    uploadBtn.addEventListener('click', async () => {
+      const f = fileInput.files[0];
+      if(!f){ alert('Choose a file'); return; }
+      setStatus('Reading file...');
+      const reader = new FileReader();
+      reader.onload = async function(ev){
+        const b64 = ev.target.result.split(',')[1];
+        setStatus('Uploading to API...');
+        const payload = {
+          filename: f.name,
+          file_base64: b64,
+          email: emailInput.value || null,
+          notify: notifyInput.checked
+        };
+        try {
+          const res = await fetch(API_BASE + '/upload', {
+            method: 'POST',
+            headers: {'Content-Type':'application/json'},
+            body: JSON.stringify(payload)
+          });
+          const data = await res.json();
+          setStatus('Done');
+          if(notifyInput.checked){
+            result.innerHTML = `<p>✅ Processed and emailed to <strong>${emailInput.value}</strong></p>
+                                <p>Receipt ID: ${data.receiptId}</p>`;
+          } else {
+            showResults(data);
+          }
+        } catch (err){
+          setStatus('Error: ' + err.message);
+        }
+      };
+      reader.readAsDataURL(f);
+    });
+  </script>
+</body>
+</html>
