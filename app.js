@@ -14,24 +14,25 @@
 
     function setStatus(s){ status.innerText = s; }
    // Format results into nice HTML
-    function showResults(data){
-      let html = `<h4>Receipt ID: ${data.receiptId}</h4>`;
-      if(data.summary){
-        html += `<h5>Summary</h5><ul>`;
-        for(const [k,v] of Object.entries(data.summary)){
-          html += `<li><strong>${k}:</strong> ${v}</li>`;
-        }
-        html += `</ul>`;
-      }
-      if(data.lineItems){
-        html += `<h5>Line Items</h5><ul>`;
-        for(const item of data.lineItems){
-          html += `<li>${item.ItemIdentification} — ${item.Price}</li>`;
-        }
-        html += `</ul>`;
-      }
-      result.innerHTML = html;
+   function showResults(data){
+  currentReceiptData = data; 
+  let html = `<h4>Receipt ID: ${data.receiptId}</h4>`;
+  if(data.summary){
+    html += `<h5>Summary</h5><ul>`;
+    for(const [k,v] of Object.entries(data.summary)){
+      html += `<li><strong>${k}:</strong> ${v}</li>`;
     }
+    html += `</ul>`;
+  }
+  if(data.lineItems){
+    html += `<h5>Line Items</h5><ul>`;
+    for(const item of data.lineItems){
+      html += `<li>${item.ItemIdentification} — ${item.Price}</li>`;
+    }
+    html += `</ul>`;
+  }
+  result.innerHTML = html;
+}
 
     // Upload & process receipt
     uploadBtn.addEventListener('click', async () => {
@@ -170,4 +171,5 @@
   // Add active class to clicked tab
   event.target.classList.add('active');
 }
+
   
