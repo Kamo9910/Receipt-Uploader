@@ -208,4 +208,10 @@
   outline: none;
   background-color: #ffffff;
   box-shadow: 0 0 8px rgba(79, 70, 229, 0.4);
+
 }
+footer {
+  margin-top: 5%;
+  color: #F0F8FF;
+  text-align: center;
+  font-family: 'Indie Flower', cursive;
