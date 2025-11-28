@@ -145,24 +145,37 @@ function downloadPDF(data) {
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF();
 
-  doc.setFontSize(14);
-  doc.text(`Receipt ID: ${data.receiptId}`, 10, 10);
+  let y = 10;
+
+  doc.setFontSize(16);
+  doc.text(`Receipt ID: ${data.receiptId}`, 10, y);
+  y += 10;
 
   if (data.summary) {
-    doc.text("Summary:", 10, 20);
-    let y = 30;
+    doc.setFontSize(14);
+    doc.text("Summary:", 10, y);
+    y += 10;
+
+    doc.setFontSize(12);
     for (const [key, value] of Object.entries(data.summary)) {
-      doc.text(`${key}: ${value}`, 10, y);
-      y += 10;
+      const lines = doc.splitTextToSize(`${key}: ${value}`, 180);
+      doc.text(lines, 10, y);
+      y += lines.length * 6;
     }
   }
 
   if (data.lineItems) {
-    doc.text("Line Items:", 10, 60);
-    let y = 70;
+    y += 10;
+    doc.setFontSize(14);
+    doc.text("Line Items:", 10, y);
+    y += 10;
+
+    doc.setFontSize(12);
     for (const item of data.lineItems) {
-      doc.text(`${item.ItemIdentification} — ${item.Price}`, 10, y);
-      y += 10;
+      const line = `${item.ItemIdentification} — ${item.Price}`;
+      const wrapped = doc.splitTextToSize(line, 180);
+      doc.text(wrapped, 10, y);
+      y += wrapped.length * 6;
     }
   }
 
@@ -185,3 +198,4 @@ function showTab(tabId) {
   document.getElementById(tabId).style.display = 'block';
   event.target.classList.add('active');
 }
+
